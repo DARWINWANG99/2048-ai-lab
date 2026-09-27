@@ -7,6 +7,7 @@ let moves = 0;
 let running = false;
 let timer = null;
 let batchResults = [];
+let batchRunning = false;
 
 const boardEl = document.querySelector("#board");
 const scoreEl = document.querySelector("#score");
@@ -17,6 +18,7 @@ const modeEl = document.querySelector("#ai-mode");
 const speedEl = document.querySelector("#speed");
 const depthEl = document.querySelector("#depth");
 const batchOutputEl = document.querySelector("#batch-output");
+const batchButtons = [document.querySelector("#batch-10"), document.querySelector("#batch-100")];
 
 function tileClass(v) {
   return v ? `tile tile-${Math.min(v, 8192)}` : "tile tile-empty";
@@ -107,6 +109,7 @@ function seededRandom(seed) {
 
 function playOne(mode, seed, depth) {
   const rng = seededRandom(seed);
+  const moveRng = seededRandom(seed ^ 0x9e3779b9);
   let state = newGame(rng);
   let localScore = 0;
   let localMoves = 0;
@@ -114,7 +117,7 @@ function playOne(mode, seed, depth) {
 
   while (!isGameOver(state) && localMoves < maxSteps) {
     let direction;
-    if (mode === "random") direction = randomMove(state, rng);
+    if (mode === "random") direction = randomMove(state, moveRng);
     else if (mode === "corner") direction = cornerMove(state);
     else direction = expectimaxMove(state, depth);
     if (!direction) break;
@@ -129,6 +132,10 @@ function playOne(mode, seed, depth) {
 }
 
 async function runBatch(count) {
+  if (batchRunning) return;
+  batchRunning = true;
+  batchButtons.forEach(button => { button.disabled = true; });
+  try {
   stopAI();
   const mode = modeEl.value;
   const selectedDepth = Number(depthEl.value);
@@ -139,10 +146,8 @@ async function runBatch(count) {
 
   for (let i = 0; i < count; i += 1) {
     batchResults.push(playOne(mode, 20261024 + i, depth));
-    if ((i + 1) % 5 === 0) {
-      batchOutputEl.textContent = `已完成 ${i + 1}/${count} 局…`;
-      await new Promise(resolve => setTimeout(resolve, 0));
-    }
+    batchOutputEl.textContent = `已完成 ${i + 1}/${count} 局…`;
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
 
   const avg = key => Math.round(batchResults.reduce((s, x) => s + x[key], 0) / batchResults.length);
@@ -156,6 +161,10 @@ async function runBatch(count) {
     最高方块：${best.toLocaleString()}<br>
     ≥512：${pct(512)}%　≥1024：${pct(1024)}%　≥2048：${pct(2048)}%
   `;
+  } finally {
+    batchRunning = false;
+    batchButtons.forEach(button => { button.disabled = false; });
+  }
 }
 
 window.addEventListener("keydown", event => {
@@ -166,21 +175,21 @@ window.addEventListener("keydown", event => {
   applyMove(map[event.key]);
 });
 
-let touchStart = null;
-boardEl.addEventListener("touchstart", event => {
-  const t = event.changedTouches[0];
-  touchStart = [t.clientX, t.clientY];
-}, { passive: true });
-boardEl.addEventListener("touchend", event => {
-  if (!touchStart) return;
-  const t = event.changedTouches[0];
-  const dx = t.clientX - touchStart[0];
-  const dy = t.clientY - touchStart[1];
-  touchStart = null;
+let swipeStart = null;
+boardEl.addEventListener("pointerdown", event => {
+  swipeStart = [event.pointerId, event.clientX, event.clientY];
+  boardEl.setPointerCapture(event.pointerId);
+});
+boardEl.addEventListener("pointerup", event => {
+  if (!swipeStart || event.pointerId !== swipeStart[0]) return;
+  const dx = event.clientX - swipeStart[1];
+  const dy = event.clientY - swipeStart[2];
+  swipeStart = null;
   if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
   stopAI();
   applyMove(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
-}, { passive: true });
+});
+boardEl.addEventListener("pointercancel", () => { swipeStart = null; });
 
 document.querySelector("#new-game").addEventListener("click", reset);
 document.querySelector("#ai-start").addEventListener("click", startAI);
