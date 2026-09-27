@@ -24,6 +24,8 @@ test("move directions rotate correctly", () => {
   const board = [[2,0,0,0],[2,0,0,0],[4,0,0,0],[4,0,0,0]];
   assert.deepEqual(moveBoard(board,"down").board.map(r=>r[0]), [0,0,4,8]);
   assert.deepEqual(moveBoard(board,"up").board.map(r=>r[0]), [4,8,0,0]);
+  const rowBoard = [[2,2,4,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+  assert.deepEqual(moveBoard(rowBoard,"right").board[0], [0,0,4,8]);
 });
 
 test("full checkerboard is game over", () => {
