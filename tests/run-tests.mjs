@@ -9,6 +9,8 @@ function test(name, fn) {
 
 test("slideLine merges once per move", () => {
   assert.deepEqual(slideLine([2,2,2,2]), { line:[4,4,0,0], scoreDelta:8 });
+  assert.deepEqual(slideLine([4,4,8,8]), { line:[8,16,0,0], scoreDelta:24 });
+  assert.deepEqual(slideLine([2,2,4,0]), { line:[4,4,0,0], scoreDelta:4 });
   assert.deepEqual(slideLine([4,4,8,0]), { line:[8,8,0,0], scoreDelta:8 });
 });
 
@@ -26,12 +28,27 @@ test("move directions rotate correctly", () => {
   assert.deepEqual(moveBoard(board,"up").board.map(r=>r[0]), [4,8,0,0]);
   const rowBoard = [[2,2,4,4],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
   assert.deepEqual(moveBoard(rowBoard,"right").board[0], [0,0,4,8]);
+  assert.deepEqual(moveBoard([[2,2,2,2],[0,0,0,0],[0,0,0,0],[0,0,0,0]],"right").board[0], [0,0,4,4]);
+  assert.deepEqual(moveBoard([[4,0,0,0],[4,0,0,0],[8,0,0,0],[8,0,0,0]],"up").board.map(r=>r[0]), [8,16,0,0]);
+  assert.deepEqual(moveBoard([[4,0,0,0],[4,0,0,0],[8,0,0,0],[8,0,0,0]],"down").board.map(r=>r[0]), [0,0,8,16]);
+});
+
+test("invalid move leaves board and score unchanged", () => {
+  const board = [[2,4,8,16],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+  assert.deepEqual(moveBoard(board,"left"), { board, scoreDelta:0, moved:false });
+  assert.equal(validMoves(board).includes("left"), false);
 });
 
 test("full checkerboard is game over", () => {
   const board = [[2,4,2,4],[4,2,4,2],[2,4,2,4],[4,2,4,2]];
   assert.equal(isGameOver(board), true);
   assert.deepEqual(validMoves(board), []);
+});
+
+test("full board with an adjacent pair still has legal moves", () => {
+  const board = [[2,2,4,8],[4,8,16,32],[8,16,32,64],[16,32,64,128]];
+  assert.equal(isGameOver(board), false);
+  assert.deepEqual(validMoves(board), ["left", "right"]);
 });
 
 test("addRandomTile adds exactly one 2 or 4", () => {
@@ -41,6 +58,8 @@ test("addRandomTile adds exactly one 2 or 4", () => {
   const next = addRandomTile(board, () => rngValues[i++]);
   assert.equal(next.flat().filter(Boolean).length, 1);
   assert.ok([2,4].includes(maxTile(next)));
+  assert.equal(addRandomTile(emptyBoard(), (() => { const values = [0,0.899999]; return () => values.shift(); })())[0][0], 2);
+  assert.equal(addRandomTile(emptyBoard(), (() => { const values = [0,0.9]; return () => values.shift(); })())[0][0], 4);
 });
 
 test("AI selectors always return a valid move", () => {
