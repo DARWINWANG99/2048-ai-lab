@@ -26,14 +26,14 @@ function monotonicity(board) {
     ...[0, 1, 2, 3].map(c => board.map(row => row[c]))
   ];
   for (const line of lines) {
-    const logs = line.map(log2);
+    const logs = line.filter(Boolean).map(log2);
     let inc = 0;
     let dec = 0;
-    for (let i = 0; i < 3; i += 1) {
+    for (let i = 0; i + 1 < logs.length; i += 1) {
       if (logs[i] >= logs[i + 1]) dec += logs[i] - logs[i + 1];
       else inc += logs[i + 1] - logs[i];
     }
-    score += Math.max(inc, dec);
+    score -= Math.min(inc, dec);
   }
   return score;
 }
