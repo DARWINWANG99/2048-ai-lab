@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Teresa 2048 AI Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <header>
+      <p class="eyebrow">1024 数学节 · 小实验</p>
+      <h1>Teresa 2048 AI Lab</h1>
+      <p class="lead">同一个 2048，让随机、简单规则和 Expectimax 分别来玩。看看“规则”和“提前想几步”到底能带来多大差别。</p>
+    </header>
+
+    <section class="stats" aria-label="当前成绩">
+      <div><span>得分</span><strong id="score">0</strong></div>
+      <div><span>最高方块</span><strong id="max-tile">0</strong></div>
+      <div><span>有效步数</span><strong id="moves">0</strong></div>
+    </section>
+
+    <section class="lab-grid">
+      <div>
+        <div id="board" class="board" aria-label="2048 棋盘"></div>
+        <div id="status" class="status">准备就绪</div>
+        <div class="manual-help">电脑：方向键　·　平板/手机：在棋盘上滑动</div>
+      </div>
+
+      <aside class="panel">
+        <h2>AI 实验</h2>
+        <label>玩家
+          <select id="ai-mode">
+            <option value="random">Random AI · 随机</option>
+            <option value="corner" selected>Corner AI · 角落+排序</option>
+            <option value="expectimax">Expectimax · 看未来</option>
+          </select>
+        </label>
+        <label>Expectimax 深度
+          <select id="depth">
+            <option value="1">1 · 很快</option>
+            <option value="2" selected>2 · 推荐</option>
+            <option value="3">3 · 慢但更认真</option>
+          </select>
+        </label>
+        <label>演示速度
+          <select id="speed">
+            <option value="40">很快</option>
+            <option value="120" selected>正常</option>
+            <option value="350">慢慢看</option>
+          </select>
+        </label>
+
+        <div class="buttons">
+          <button id="ai-start">AI 连续玩</button>
+          <button id="ai-step" class="secondary">AI 走一步</button>
+          <button id="ai-stop" class="secondary">暂停</button>
+          <button id="new-game" class="secondary">新一局</button>
+        </div>
+
+        <h2>跑很多局</h2>
+        <p class="small">用固定随机种子比较不同 AI。Expectimax 批量实验固定使用 depth 1，避免浏览器长时间卡住；单局演示仍可用更深搜索。不要连接学校排行榜。</p>
+        <div class="buttons two">
+          <button id="batch-10">跑 10 局</button>
+          <button id="batch-100">跑 100 局</button>
+        </div>
+        <div id="batch-output" class="batch-output"></div>
+      </aside>
+    </section>
+
+    <section class="explain">
+      <h2>三个 AI 到底有什么区别？</h2>
+      <div class="cards">
+        <article><h3>Random</h3><p>只要能走就随机选一个方向。它是我们的“什么都没学”基线。</p></article>
+        <article><h3>Corner</h3><p>喜欢把最大方块留在左下角，同时奖励空格、可合并方块和整齐的大数队伍。</p></article>
+        <article><h3>Expectimax</h3><p>把四个方向都先模拟，再把随机出现的 2/4 和位置一起算进去，选择未来平均最好的方向。</p></article>
+      </div>
+    </section>
+
+    <footer>这是学习实验，不用于学校正式比赛或排行榜自动提交。</footer>
+  </main>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
