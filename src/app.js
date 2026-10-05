@@ -8,6 +8,8 @@ let running = false;
 let timer = null;
 let batchResults = [];
 let batchRunning = false;
+let challengeTimer = null;
+let challengeEndsAt = 0;
 
 const boardEl = document.querySelector("#board");
 const scoreEl = document.querySelector("#score");
@@ -18,6 +20,7 @@ const modeEl = document.querySelector("#ai-mode");
 const speedEl = document.querySelector("#speed");
 const depthEl = document.querySelector("#depth");
 const batchOutputEl = document.querySelector("#batch-output");
+const challengeOutputEl = document.querySelector("#challenge-output");
 const batchButtons = [document.querySelector("#batch-10"), document.querySelector("#batch-100")];
 
 function tileClass(v) {
@@ -94,9 +97,43 @@ function startAI() {
 
 function stopAI() {
   running = false;
+  if (challengeTimer) clearTimeout(challengeTimer);
+  challengeTimer = null;
+  challengeEndsAt = 0;
   if (timer) clearTimeout(timer);
   timer = null;
   render();
+}
+
+
+function startThreeMinuteChallenge() {
+  stopAI();
+  board = newGame();
+  score = 0;
+  moves = 0;
+  running = true;
+  challengeEndsAt = Date.now() + 180000;
+  challengeOutputEl.textContent = "3 分钟挑战进行中…";
+
+  const loop = () => {
+    if (!running) return;
+    const remaining = challengeEndsAt - Date.now();
+    if (remaining <= 0 || isGameOver(board)) {
+      const endedByGameOver = isGameOver(board);
+      running = false;
+      if (challengeTimer) clearTimeout(challengeTimer);
+      challengeTimer = null;
+      challengeEndsAt = 0;
+      challengeOutputEl.innerHTML = `<strong>3 分钟挑战结果</strong><br>得分：${score.toLocaleString()}<br>最高方块：${maxTile(board).toLocaleString()}<br>有效步数：${moves.toLocaleString()}<br>${endedByGameOver ? "棋盘提前结束" : "时间到"}`;
+      render();
+      return;
+    }
+    aiStep();
+    if (!running) return;
+    challengeTimer = setTimeout(loop, Number(speedEl.value));
+  };
+  render();
+  loop();
 }
 
 function seededRandom(seed) {
@@ -193,6 +230,7 @@ boardEl.addEventListener("pointercancel", () => { swipeStart = null; });
 
 document.querySelector("#new-game").addEventListener("click", reset);
 document.querySelector("#ai-start").addEventListener("click", startAI);
+document.querySelector("#challenge-3m").addEventListener("click", startThreeMinuteChallenge);
 document.querySelector("#ai-step").addEventListener("click", () => { stopAI(); aiStep(); });
 document.querySelector("#ai-stop").addEventListener("click", stopAI);
 document.querySelector("#batch-10").addEventListener("click", () => runBatch(10));
