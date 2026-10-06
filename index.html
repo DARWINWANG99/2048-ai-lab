@@ -11,7 +11,7 @@
     <header>
       <p class="eyebrow">1024 数学节 · 小实验</p>
       <h1>Teresa 2048 AI Lab</h1>
-      <p class="lead">同一个 2048，从随机、角落规则、Expectimax 到 Strong AI。看看 AI 怎样靠更好的评价函数、更深搜索和剪枝一步步升级。</p>
+      <p class="lead">同一个 2048，从随机、角落规则、Expectimax、Strong AI 到研究版搜索。看看 AI 怎样靠更好的评价函数、更深搜索和剪枝一步步升级。</p>
     </header>
 
     <section class="stats" aria-label="当前成绩">
@@ -35,6 +35,7 @@
             <option value="corner" selected>Corner AI · 角落+排序</option>
             <option value="expectimax">Expectimax · 看未来</option>
             <option value="strong">Strong AI · 更深搜索</option>
+            <option value="research">Research AI · 行查表+概率搜索（实验）</option>
           </select>
         </label>
         <label>搜索强度
@@ -60,6 +61,7 @@
           <button id="new-game" class="secondary">新一局</button>
         </div>
 
+        <div id="research-analysis" class="batch-output" style="white-space:pre-wrap" aria-live="polite"></div>
         <h2>跑很多局</h2>
         <p class="small">用固定随机种子比较不同 AI。Expectimax 批量实验固定使用 depth 1，避免浏览器长时间卡住；单局演示仍可用更深搜索。不要连接学校排行榜。</p>
         <div class="buttons two">
@@ -72,12 +74,13 @@
     </section>
 
     <section class="explain">
-      <h2>三个 AI 到底有什么区别？</h2>
+      <h2>五种策略到底有什么区别？</h2>
       <div class="cards">
         <article><h3>Random</h3><p>只要能走就随机选一个方向。它是我们的“什么都没学”基线。</p></article>
         <article><h3>Corner</h3><p>喜欢把最大方块留在左下角，同时奖励空格、可合并方块和整齐的大数队伍。</p></article>
         <article><h3>Expectimax</h3><p>把四个方向都先模拟，再把随机出现的 2/4 和位置一起算进去，选择未来平均最好的方向。</p></article>
         <article><h3>Strong AI</h3><p>在 Expectimax 上再升级：更重视蛇形大数链，并根据棋盘空位自动调整搜索深度，用概率剪枝把算力留给更重要的未来。</p></article>
+        <article><h3>Research AI（实验版）</h3><p>把四格行的移动与评分预先算好，再用概率搜索、缓存比较四个方向；逐步显示每个方向的启发式价值。目前没有接入残局 Tablebase，不能宣称 70 万能力。</p></article>
       </div>
     </section>
 

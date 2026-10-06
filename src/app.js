@@ -1,5 +1,6 @@
 import { addRandomTile, isGameOver, maxTile, moveBoard, newGame } from "./engine.js";
 import { cornerMove, expectimaxMove, randomMove, strongMove } from "./ai.js";
+import { researchMove, researchExplain } from "./research.js";
 
 let board = newGame();
 let score = 0;
@@ -21,6 +22,7 @@ const speedEl = document.querySelector("#speed");
 const depthEl = document.querySelector("#depth");
 const batchOutputEl = document.querySelector("#batch-output");
 const challengeOutputEl = document.querySelector("#challenge-output");
+const researchOutputEl = document.querySelector("#research-analysis");
 const batchButtons = [document.querySelector("#batch-10"), document.querySelector("#batch-100")];
 
 function tileClass(v) {
@@ -47,6 +49,7 @@ function reset() {
   score = 0;
   moves = 0;
   batchOutputEl.textContent = "";
+  researchOutputEl.textContent = "";
   render();
 }
 
@@ -66,6 +69,16 @@ function chooseMove(state) {
     case "corner": return cornerMove(state);
     case "expectimax": return expectimaxMove(state, Number(depthEl.value));
     case "strong": return strongMove(state, Number(depthEl.value));
+    case "research": {
+      const result = researchExplain(state, Math.min(2, Number(depthEl.value)));
+      const labels = {left:"左",down:"下",right:"右",up:"上"};
+      researchOutputEl.textContent = "研究版推演（启发式分数，不是成功概率）\n" +
+        result.choices.map(x => labels[x.direction] + "：" + (x.legal ? x.value.toLocaleString() : "不可走")).join("　") +
+        "\n选择：" + (labels[result.direction] || "无") + " · 搜索节点：" + result.stats.nodes.toLocaleString() +
+        " · 缓存命中：" + result.stats.cacheHits.toLocaleString() + " · 深度：" + result.stats.depth +
+        " · 残局表：未接入";
+      return result.direction;
+    }
     default: return null;
   }
 }
@@ -158,6 +171,7 @@ function playOne(mode, seed, depth) {
     if (mode === "random") direction = randomMove(state, moveRng);
     else if (mode === "corner") direction = cornerMove(state);
     else if (mode === "expectimax") direction = expectimaxMove(state, depth);
+    else if (mode === "research") direction = researchMove(state, Math.min(1, depth));
     else direction = strongMove(state, depth);
     if (!direction) break;
     const result = moveBoard(state, direction);
@@ -178,9 +192,9 @@ async function runBatch(count) {
   stopAI();
   const mode = modeEl.value;
   const selectedDepth = Number(depthEl.value);
-  const depth = mode === "expectimax" ? 1 : (mode === "strong" ? Math.min(2, selectedDepth) : selectedDepth);
+  const depth = mode === "expectimax" ? 1 : (mode === "strong" ? Math.min(2, selectedDepth) : (mode === "research" ? 1 : selectedDepth));
   batchResults = [];
-  const depthNote = mode === "expectimax" ? "（批量固定 depth 1）" : (mode === "strong" ? "（批量最高 level 2）" : "");
+  const depthNote = mode === "expectimax" ? "（批量固定 depth 1）" : (mode === "strong" ? "（批量最高 level 2）" : (mode === "research" ? "（批量固定 level 1）" : ""));
   batchOutputEl.textContent = `正在跑 ${count} 局 ${mode}${depthNote}…`;
 
   for (let i = 0; i < count; i += 1) {
@@ -238,8 +252,8 @@ document.querySelector("#ai-stop").addEventListener("click", stopAI);
 document.querySelector("#batch-10").addEventListener("click", () => runBatch(10));
 document.querySelector("#batch-100").addEventListener("click", () => runBatch(100));
 modeEl.addEventListener("change", () => {
-  depthEl.disabled = !["expectimax","strong"].includes(modeEl.value);
+  depthEl.disabled = !["expectimax","strong","research"].includes(modeEl.value);
 });
-depthEl.disabled = !["expectimax","strong"].includes(modeEl.value);
+depthEl.disabled = !["expectimax","strong","research"].includes(modeEl.value);
 
 render();

@@ -1,7 +1,7 @@
 name: Strong AI CI
 on:
   push:
-    branches: [strong-ai-v1]
+    branches: [strong-ai-v1, research-ai-v1]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -16,3 +16,4 @@ jobs:
           node-version: 22
       - run: npm test
       - run: node tests/benchmark.mjs 1
+      - run: node tests/research-benchmark.mjs 1 1

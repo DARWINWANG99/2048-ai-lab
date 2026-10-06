@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { addRandomTile, emptyBoard, isGameOver, maxTile, moveBoard, slideLine, validMoves } from "../src/engine.js";
 import { cornerMove, evaluateBoard, expectimaxMove, randomMove, strongMove } from "../src/ai.js";
+import { researchMove, researchExplain } from "../src/research.js";
 
 function test(name, fn) {
   try { fn(); console.log(`✓ ${name}`); }
@@ -86,4 +87,21 @@ test("Strong AI protects a high corner chain", () => {
   assert.ok(validMoves(board).includes(move));
   const next=moveBoard(board,move).board;
   assert.ok(maxTile(next)>=1024);
+});
+
+test("Research AI produces legal moves and inspectable alternatives", () => {
+  const boards=[
+    [[0,0,0,0],[0,0,0,0],[0,2,0,4],[8,4,2,0]],
+    [[0,0,2,4],[0,4,8,16],[2,16,32,64],[1024,512,256,128]],
+    [[2,4,2,4],[4,2,4,2],[2,4,2,4],[4,2,4,2]]
+  ];
+  for(const board of boards){
+    const result=researchExplain(board,1);
+    assert.equal(result.choices.length,4);
+    assert.equal(result.stats.tablebase,false);
+    assert.equal(result.direction,researchMove(board,1));
+    const valid=validMoves(board);
+    if(valid.length)assert.ok(valid.includes(result.direction));
+    else assert.equal(result.direction,null);
+  }
 });

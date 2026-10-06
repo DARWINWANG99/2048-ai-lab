@@ -59,3 +59,9 @@ Reproducible CI smoke benchmark (seed `20261024`, 2026-10-06):
 | Strong level 2 | **33,212** | **2,048** | 1,725 |
 
 This is a browser-friendly teaching upgrade, not a claim to reproduce research-grade 700k+ solvers. The next research step would be bitboards/row lookup and an endgame tablebase; those approaches trade substantially more implementation/data complexity for strength.
+
+## Research AI (experimental)
+
+The Research AI stage uses a precomputed 20-bit row-move/evaluation lookup and a bounded expectimax search with a transposition cache. The four legal directions expose **heuristic utilities**, not probabilities. This is an independent experimental implementation inspired by [macroxue/2048-ai](https://github.com/macroxue/2048-ai) and the tablebase ideas of [2048EndgameTablebase](https://github.com/game-difficulty/2048EndgameTablebase). **No endgame tablebase is included; neither a 707,376 score nor a 700k average has been verified for this repository.**
+
+Reproducible local test: `node tests/research-benchmark.mjs 1 2 20261024`. Outputs seed, score, max tile, moves, runtime and commit when `GITHUB_SHA` is supplied. Runtime varies by machine; score and moves should reproduce for the same code/seed. The default CI smoke test runs a lower-cost level 1 game.
