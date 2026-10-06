@@ -1,0 +1,16 @@
+name: Strong AI validation
+on:
+  push:
+    branches: [strong-ai-upgrade]
+  workflow_dispatch:
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm test
+      - name: Strong AI reproducible benchmark
+        run: node tests/benchmark.mjs
