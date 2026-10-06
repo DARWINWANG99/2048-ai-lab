@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node tests/run-tests.mjs",
-    "serve": "python3 -m http.server 8080"
+    "serve": "python3 -m http.server 8080",
+    "benchmark": "node tests/benchmark.mjs 10"
   }
 }
