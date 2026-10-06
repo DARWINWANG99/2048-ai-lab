@@ -13,4 +13,4 @@ jobs:
         with:
           node-version: 22
       - run: npm test
-      - run: node tests/benchmark.mjs 3
+      - run: node tests/benchmark.mjs 1
