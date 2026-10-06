@@ -34,6 +34,7 @@
             <option value="random">Random AI · 随机</option>
             <option value="corner" selected>Corner AI · 角落+排序</option>
             <option value="expectimax">Expectimax · 看未来</option>
+            <option value="strong">Strong AI · 自适应深搜</option>
           </select>
         </label>
         <label>Expectimax 深度
@@ -71,11 +72,12 @@
     </section>
 
     <section class="explain">
-      <h2>三个 AI 到底有什么区别？</h2>
+      <h2>四个 AI 到底有什么区别？</h2>
       <div class="cards">
         <article><h3>Random</h3><p>只要能走就随机选一个方向。它是我们的“什么都没学”基线。</p></article>
         <article><h3>Corner</h3><p>喜欢把最大方块留在左下角，同时奖励空格、可合并方块和整齐的大数队伍。</p></article>
         <article><h3>Expectimax</h3><p>把四个方向都先模拟，再把随机出现的 2/4 和位置一起算进去，选择未来平均最好的方向。</p></article>
+        <article><h3>Strong AI</h3><p>用更强的蛇形局面评分，并在棋盘变挤时自动加深搜索：不是每一步都花同样算力，而是在危险残局里想得更多。</p></article>
       </div>
     </section>
 
