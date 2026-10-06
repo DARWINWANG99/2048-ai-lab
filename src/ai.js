@@ -119,7 +119,7 @@ export function expectimaxMove(board,depth=3){ return searchMove(board,depth); }
 // freezing a phone browser.
 export function strongMove(board, level=2) {
   const empties=emptyCells(board).length;
-  const depth = level>=3 ? (empties>=8?4:3) : level===2 ? (empties>=9?3:2) : 2;
+  const depth = level>=3 ? (empties<=5 ? 3 : 2) : 2;
   const cutoff = level>=3 ? 0.0005 : 0.002;
   return searchMove(board,depth,{probabilityCutoff:cutoff,maxChanceCells:16});
 }
