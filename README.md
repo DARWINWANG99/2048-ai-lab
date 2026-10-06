@@ -44,3 +44,18 @@ npm test
 - 10 局 batch 检查；
 - Expectimax depth 1/2/3 响应时间检查；
 - 确认没有学校账号、学校站点 URL、自动提交排行榜或登录逻辑。
+
+
+## Strong AI v0.2
+
+The lab now has a fourth learning stage: **Strong AI**. It keeps Expectimax's chance model, adds a stronger snake/corner evaluation, a collision-safe transposition cache, adaptive search and probability pruning.
+
+Reproducible CI smoke benchmark (seed `20261024`, 2026-10-06):
+
+| AI | Score | Max tile | Moves |
+|---|---:|---:|---:|
+| Corner | 14,396 | 1,024 | 873 |
+| Expectimax depth 1 | 16,828 | 1,024 | 1,017 |
+| Strong level 2 | **33,212** | **2,048** | 1,725 |
+
+This is a browser-friendly teaching upgrade, not a claim to reproduce research-grade 700k+ solvers. The next research step would be bitboards/row lookup and an endgame tablebase; those approaches trade substantially more implementation/data complexity for strength.
