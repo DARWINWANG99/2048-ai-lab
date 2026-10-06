@@ -72,7 +72,7 @@ export function cornerMove(board){
   return best;
 }
 
-const key=b=>b.flat().map(v=>v?lg(v):0).join("");
+const key=b=>b.flat().map(v=>v?lg(v):0).join(",");
 
 function searchMove(board, depth, options={}) {
   const cache=new Map();
