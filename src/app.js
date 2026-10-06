@@ -1,5 +1,5 @@
 import { addRandomTile, isGameOver, maxTile, moveBoard, newGame } from "./engine.js";
-import { cornerMove, expectimaxMove, randomMove } from "./ai.js";
+import { cornerMove, expectimaxMove, randomMove, strongMove } from "./ai.js";
 
 let board = newGame();
 let score = 0;
@@ -65,6 +65,7 @@ function chooseMove(state) {
     case "random": return randomMove(state);
     case "corner": return cornerMove(state);
     case "expectimax": return expectimaxMove(state, Number(depthEl.value));
+    case "strong": return strongMove(state, Number(depthEl.value));
     default: return null;
   }
 }
@@ -156,7 +157,8 @@ function playOne(mode, seed, depth) {
     let direction;
     if (mode === "random") direction = randomMove(state, moveRng);
     else if (mode === "corner") direction = cornerMove(state);
-    else direction = expectimaxMove(state, depth);
+    else if (mode === "expectimax") direction = expectimaxMove(state, depth);
+    else direction = strongMove(state, depth);
     if (!direction) break;
     const result = moveBoard(state, direction);
     if (!result.moved) break;
@@ -176,9 +178,9 @@ async function runBatch(count) {
   stopAI();
   const mode = modeEl.value;
   const selectedDepth = Number(depthEl.value);
-  const depth = mode === "expectimax" ? 1 : selectedDepth;
+  const depth = mode === "expectimax" ? 1 : mode === "strong" ? 2 : selectedDepth;
   batchResults = [];
-  const depthNote = mode === "expectimax" ? "（批量固定 depth 1）" : "";
+  const depthNote = mode === "expectimax" ? "（批量固定 depth 1）" : mode === "strong" ? "（批量 base depth 2 + 自适应残局加深）" : "";
   batchOutputEl.textContent = `正在跑 ${count} 局 ${mode}${depthNote}…`;
 
   for (let i = 0; i < count; i += 1) {
@@ -192,7 +194,7 @@ async function runBatch(count) {
   const best = Math.max(...batchResults.map(x => x.max));
 
   batchOutputEl.innerHTML = `
-    <strong>${mode} · ${count} 局${mode === "expectimax" ? " · depth 1" : ""}</strong><br>
+    <strong>${mode} · ${count} 局${mode === "expectimax" ? " · depth 1" : mode === "strong" ? " · adaptive" : ""}</strong><br>
     平均分：${avg("score").toLocaleString()}<br>
     平均步数：${avg("moves").toLocaleString()}<br>
     最高方块：${best.toLocaleString()}<br>
@@ -236,8 +238,8 @@ document.querySelector("#ai-stop").addEventListener("click", stopAI);
 document.querySelector("#batch-10").addEventListener("click", () => runBatch(10));
 document.querySelector("#batch-100").addEventListener("click", () => runBatch(100));
 modeEl.addEventListener("change", () => {
-  depthEl.disabled = modeEl.value !== "expectimax";
+  depthEl.disabled = !["expectimax","strong"].includes(modeEl.value);
 });
-depthEl.disabled = modeEl.value !== "expectimax";
+depthEl.disabled = !["expectimax","strong"].includes(modeEl.value);
 
 render();
