@@ -1,5 +1,7 @@
 name: Strong AI validation
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [strong-ai-upgrade]
   workflow_dispatch:
