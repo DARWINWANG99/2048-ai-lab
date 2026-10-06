@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { addRandomTile, emptyBoard, isGameOver, maxTile, moveBoard, slideLine, validMoves } from "../src/engine.js";
-import { cornerMove, evaluateBoard, expectimaxMove, randomMove } from "../src/ai.js";
+import { cornerMove, evaluateBoard, expectimaxMove, randomMove, strongMove } from "../src/ai.js";
 
 function test(name, fn) {
   try { fn(); console.log(`✓ ${name}`); }
@@ -68,6 +68,7 @@ test("AI selectors always return a valid move", () => {
   assert.ok(moves.includes(randomMove(board, () => 0.1)));
   assert.ok(moves.includes(cornerMove(board)));
   assert.ok(moves.includes(expectimaxMove(board, 2)));
+  assert.ok(moves.includes(strongMove(board, 2)));
 });
 
 test("heuristic prefers an ordered bottom-left board", () => {
@@ -77,3 +78,10 @@ test("heuristic prefers an ordered bottom-left board", () => {
 });
 
 console.log("\nAll tests passed.");
+
+
+test("strong AI survives a tight endgame decision", () => {
+  const board=[[4096,2048,1024,512],[64,128,256,512],[32,16,8,4],[2,4,2,0]];
+  const move=strongMove(board,2);
+  assert.ok(validMoves(board).includes(move));
+});
