@@ -49,3 +49,12 @@ footer { margin-top:22px; text-align:center; color:#8c8379; font-size:13px; }
   .stats strong { font-size: 22px; }
   .cards { grid-template-columns: 1fr; }
 }
+/* Keep the game board physically stable while AI updates tiles. */
+.lab-grid > :first-child { min-width: 0; }
+.board { width: 100%; height: auto; aspect-ratio: 1 / 1; grid-template-rows: repeat(4, minmax(0, 1fr)); overflow: hidden; }
+.tile { min-height: 0; min-width: 0; overflow: hidden; line-height: 1; font-variant-numeric: tabular-nums; }
+@media (max-width: 820px) {
+  .board { width: min(100%, 520px); margin-inline: auto; }
+  .tile { font-size: clamp(20px, 6vw, 42px); }
+  .tile-1024, .tile-2048, .tile-4096, .tile-8192 { font-size: clamp(17px, 4.5vw, 34px); }
+}
