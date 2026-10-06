@@ -1,166 +1,61 @@
 import { emptyCells, maxTile, moveBoard, validMoves } from "./engine.js";
 
 const DIRECTIONS = ["left", "down", "right", "up"];
+const SNAKES = [
+  [[15,14,13,12],[8,9,10,11],[7,6,5,4],[0,1,2,3]],
+  [[12,13,14,15],[11,10,9,8],[4,5,6,7],[3,2,1,0]],
+  [[3,2,1,0],[4,5,6,7],[11,10,9,8],[12,13,14,15]],
+  [[0,1,2,3],[7,6,5,4],[8,9,10,11],[15,14,13,12]]
+];
 
-function log2(v) {
-  return v > 0 ? Math.log2(v) : 0;
-}
-
-function smoothness(board) {
-  let penalty = 0;
-  for (let r = 0; r < 4; r += 1) {
-    for (let c = 0; c < 4; c += 1) {
-      const v = board[r][c];
-      if (!v) continue;
-      if (c + 1 < 4 && board[r][c + 1]) penalty += Math.abs(log2(v) - log2(board[r][c + 1]));
-      if (r + 1 < 4 && board[r + 1][c]) penalty += Math.abs(log2(v) - log2(board[r + 1][c]));
-    }
-  }
-  return -penalty;
-}
-
-function monotonicity(board) {
-  let score = 0;
-  const lines = [
-    ...board,
-    ...[0, 1, 2, 3].map(c => board.map(row => row[c]))
-  ];
-  for (const line of lines) {
-    const logs = line.filter(Boolean).map(log2);
-    let inc = 0;
-    let dec = 0;
-    for (let i = 0; i + 1 < logs.length; i += 1) {
-      if (logs[i] >= logs[i + 1]) dec += logs[i] - logs[i + 1];
-      else inc += logs[i + 1] - logs[i];
-    }
-    score -= Math.min(inc, dec);
-  }
-  return score;
-}
-
-function mergePotential(board) {
-  let pairs = 0;
-  for (let r = 0; r < 4; r += 1) {
-    for (let c = 0; c < 4; c += 1) {
-      if (!board[r][c]) continue;
-      if (c + 1 < 4 && board[r][c] === board[r][c + 1]) pairs += 1;
-      if (r + 1 < 4 && board[r][c] === board[r + 1][c]) pairs += 1;
-    }
-  }
-  return pairs;
-}
-
-function bottomLeftSnake(board) {
-  const weights = [
-    [1, 2, 4, 8],
-    [128, 64, 32, 16],
-    [256, 512, 1024, 2048],
-    [32768, 16384, 8192, 4096]
-  ];
-  let score = 0;
-  for (let r = 0; r < 4; r += 1) {
-    for (let c = 0; c < 4; c += 1) score += log2(board[r][c]) * weights[r][c];
-  }
-  return score;
-}
-
-export function evaluateBoard(board) {
-  const empties = emptyCells(board).length;
-  const max = maxTile(board);
-  const corner = board[3][0] === max ? log2(max) : 0;
-  return (
-    empties * 320 +
-    monotonicity(board) * 24 +
-    smoothness(board) * 7 +
-    mergePotential(board) * 55 +
-    corner * 500 +
-    bottomLeftSnake(board) * 0.02
-  );
-}
-
-export function randomMove(board, rng = Math.random) {
-  const moves = validMoves(board);
-  if (!moves.length) return null;
-  return moves[Math.floor(rng() * moves.length)];
-}
-
-export function cornerMove(board) {
-  const moves = validMoves(board);
-  if (!moves.length) return null;
-  let best = moves[0];
-  let bestScore = -Infinity;
-  for (const direction of moves) {
-    const result = moveBoard(board, direction);
-    let score = evaluateBoard(result.board) + result.scoreDelta * 0.4;
-    if (direction === "left") score += 160;
-    if (direction === "down") score += 180;
-    if (direction === "up") score -= 120;
-    if (score > bestScore) {
-      bestScore = score;
-      best = direction;
-    }
-  }
+const lg = v => v ? Math.log2(v) : 0;
+function smoothness(b){let p=0;for(let r=0;r<4;r++)for(let c=0;c<4;c++){if(!b[r][c])continue;if(c<3&&b[r][c+1])p+=Math.abs(lg(b[r][c])-lg(b[r][c+1]));if(r<3&&b[r+1][c])p+=Math.abs(lg(b[r][c])-lg(b[r+1][c]));}return-p;}
+function mergePotential(b){let n=0;for(let r=0;r<4;r++)for(let c=0;c<4;c++){if(!b[r][c])continue;if(c<3&&b[r][c]===b[r][c+1])n++;if(r<3&&b[r][c]===b[r+1][c])n++;}return n;}
+function monotonicity(b){let s=0;for(const line of [...b,...[0,1,2,3].map(c=>b.map(r=>r[c]))]){const a=line.filter(Boolean).map(lg);let x=0,y=0;for(let i=0;i<a.length-1;i++){if(a[i]>=a[i+1])x+=a[i]-a[i+1];else y+=a[i+1]-a[i];}s-=Math.min(x,y);}return s;}
+function snakeScore(b){
+  let best=-Infinity;
+  for(const w of SNAKES){let s=0;for(let r=0;r<4;r++)for(let c=0;c<4;c++)s+=lg(b[r][c])*Math.pow(1.55,w[r][c]);best=Math.max(best,s);}
   return best;
 }
-
-function boardKey(board) {
-  return board.flat().join(",");
+export function evaluateBoard(b){
+  const e=emptyCells(b).length,m=maxTile(b),corners=[b[0][0],b[0][3],b[3][0],b[3][3]];
+  const corner=corners.includes(m)?lg(m):0;
+  return e*420+monotonicity(b)*55+smoothness(b)*12+mergePotential(b)*90+corner*650+snakeScore(b)*0.75;
 }
+export function randomMove(b,rng=Math.random){const m=validMoves(b);return m.length?m[Math.floor(rng()*m.length)]:null;}
+export function cornerMove(b){let best=null,v=-Infinity;for(const d of DIRECTIONS){const x=moveBoard(b,d);if(!x.moved)continue;const q=evaluateBoard(x.board)+x.scoreDelta*.4;if(q>v){v=q;best=d;}}return best;}
+function key(b){return b.flat().map(lg).join("");}
 
-export function expectimaxMove(board, depth = 3) {
-  const memo = new Map();
-
-  function maxNode(state, d) {
-    const key = `M:${d}:${boardKey(state)}`;
-    if (memo.has(key)) return memo.get(key);
-    if (d <= 0) return evaluateBoard(state);
-
-    const moves = validMoves(state);
-    if (!moves.length) return evaluateBoard(state) - 100000;
-
-    let best = -Infinity;
-    for (const direction of DIRECTIONS) {
-      const result = moveBoard(state, direction);
-      if (!result.moved) continue;
-      const value = chanceNode(result.board, d - 1) + result.scoreDelta * 0.35;
-      if (value > best) best = value;
-    }
-    memo.set(key, best);
-    return best;
+function searchMove(board, depth, strong=false){
+  const memo=new Map();
+  let nodes=0;
+  function maxNode(s,d){
+    const k="M"+d+key(s); if(memo.has(k))return memo.get(k); nodes++;
+    if(d<=0)return evaluateBoard(s);
+    let best=-Infinity,any=false;
+    for(const dir of DIRECTIONS){const x=moveBoard(s,dir);if(!x.moved)continue;any=true;best=Math.max(best,chanceNode(x.board,d-1)+x.scoreDelta*.45);}
+    const v=any?best:evaluateBoard(s)-1e7; memo.set(k,v);return v;
   }
-
-  function chanceNode(state, d) {
-    const key = `C:${d}:${boardKey(state)}`;
-    if (memo.has(key)) return memo.get(key);
-    const cells = emptyCells(state);
-    if (!cells.length) return maxNode(state, d);
-
-    const cellProbability = 1 / cells.length;
-    let expected = 0;
-    for (const [r, c] of cells) {
-      for (const [value, probability] of [[2, 0.9], [4, 0.1]]) {
-        const next = state.map(row => [...row]);
-        next[r][c] = value;
-        expected += cellProbability * probability * maxNode(next, d);
-      }
-    }
-    memo.set(key, expected);
-    return expected;
+  function chanceNode(s,d){
+    const cells=emptyCells(s);if(!cells.length)return maxNode(s,d);
+    const k="C"+d+key(s);if(memo.has(k))return memo.get(k);
+    let expected=0;
+    // Strong mode keeps exact chance expansion in tight positions, but samples
+    // symmetric empty cells when the board is open so deeper search stays fast.
+    const stride=strong&&cells.length>8?2:1;
+    const chosen=cells.filter((_,i)=>i%stride===0);
+    const cp=1/chosen.length;
+    for(const [r,c] of chosen)for(const [value,p] of [[2,.9],[4,.1]]){const n=s.map(row=>[...row]);n[r][c]=value;expected+=cp*p*maxNode(n,d);}
+    memo.set(k,expected);return expected;
   }
-
-  const moves = validMoves(board);
-  if (!moves.length) return null;
-
-  let bestDirection = moves[0];
-  let bestValue = -Infinity;
-  for (const direction of DIRECTIONS) {
-    const result = moveBoard(board, direction);
-    if (!result.moved) continue;
-    const value = chanceNode(result.board, depth - 1) + result.scoreDelta * 0.35;
-    if (value > bestValue) {
-      bestValue = value;
-      bestDirection = direction;
-    }
-  }
-  return bestDirection;
+  let best=null,bv=-Infinity;
+  for(const d of DIRECTIONS){const x=moveBoard(board,d);if(!x.moved)continue;const v=chanceNode(x.board,depth-1)+x.scoreDelta*.45;if(v>bv){bv=v;best=d;}}
+  return {direction:best,nodes};
+}
+export function expectimaxMove(board,depth=3){return searchMove(board,depth,false).direction;}
+export function strongMove(board,depth=3){
+  const empties=emptyCells(board).length;
+  // Adaptive depth: open boards are cheap/forgiving; tight endgames deserve more look-ahead.
+  const adaptive=Math.max(depth, empties<=3?4:empties<=6?3:2);
+  return searchMove(board,adaptive,true).direction;
 }
